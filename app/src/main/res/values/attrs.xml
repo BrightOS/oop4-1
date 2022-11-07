@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CCircleView">
+
+    </declare-styleable>
+
+    <declare-styleable name="EmojiView">
+        <attr name="customTextColor" format="color" />
+        <attr name="customText" format="string" />
+        <attr name="textSize" format="dimension" />
+        <attr name="corner_radius" format="dimension" />
+        <attr name="tap_count" format="integer" />
+    </declare-styleable>
+</resources>
