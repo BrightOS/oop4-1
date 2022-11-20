@@ -18,8 +18,14 @@ class ExtendedList<E> {
         }
     }
 
-    var first: NodeModel<E>? = null
-    var last: NodeModel<E>? = null
+    private var firstNode: NodeModel<E>? = null
+    private var lastNode: NodeModel<E>? = null
+
+    val first: E?
+        get() = firstNode?.value
+
+    val last: E?
+        get() = lastNode?.value
 
     val isEmpty: Boolean
         get() = size < 1
@@ -29,13 +35,13 @@ class ExtendedList<E> {
     fun add(element: E) {
         val newNodeModel = NodeModel(element)
 
-        if (last != null) {
-            newNodeModel.previous = last
-            last?.next = newNodeModel
+        if (lastNode != null) {
+            newNodeModel.previous = lastNode
+            lastNode?.next = newNodeModel
         } else
-            first = newNodeModel
+            firstNode = newNodeModel
 
-        last = newNodeModel
+        lastNode = newNodeModel
         size++
     }
 
@@ -47,9 +53,9 @@ class ExtendedList<E> {
             throw IndexOutOfBoundsException()
 
         val previous = if (index > 0) getNodeModel(index - 1) else null
-        val next = if (previous != null) previous.next else first
+        val next = if (previous != null) previous.next else firstNode
         if (index == 0)
-            first = NodeModel(element).apply {
+            firstNode = NodeModel(element).apply {
                 this.next = next
             }
         val newNodeModel = NodeModel(element).apply {
@@ -68,13 +74,13 @@ class ExtendedList<E> {
         var node: NodeModel<E>?
 
         if (index < size / 2) {
-            node = first
+            node = firstNode
             var _index = 0
             while (_index++ != index) {
                 node = node?.next
             }
         } else {
-            node = last
+            node = lastNode
             var _index = size - 1
             while (_index-- != index) {
                 node = node?.previous
@@ -87,7 +93,7 @@ class ExtendedList<E> {
     operator fun get(index: Int): E = getNodeModel(index)!!.value
 
     fun indexOfFirst(predicate: (E) -> Boolean): Int {
-        var node = first
+        var node = firstNode
         var index = 0
 
         while (node?.value?.let { predicate(it) } == false && index < size) {
@@ -98,7 +104,7 @@ class ExtendedList<E> {
         return if (index == size) -1 else index
     }
 
-    fun count(predicate: (E) -> Boolean): Int {
+    fun countIf(predicate: (E) -> Boolean): Int {
         var result = 0
         forEach {
             if (predicate(it))
@@ -108,8 +114,8 @@ class ExtendedList<E> {
     }
 
     fun clear() {
-        first = null
-        last = null
+        firstNode = null
+        lastNode = null
         size = 0
     }
 
@@ -126,13 +132,13 @@ class ExtendedList<E> {
         var node: NodeModel<E>?
 
         if (index < size / 2) {
-            node = first
+            node = firstNode
             var _index = 0
             while (_index++ != index) {
                 node = node?.next
             }
         } else {
-            node = last
+            node = lastNode
             var _index = size - 1
             while (_index-- != index) {
                 node = node?.previous
@@ -142,35 +148,47 @@ class ExtendedList<E> {
 //        println("${node?.previous?.next?.value} ${node?.next?.value} ${node?.next?.previous?.value} ${node?.previous?.value}")
         node?.previous?.next = node?.next
         if (node?.previous?.next == null)
-            first = node?.next
+            firstNode = node?.next
         node?.next?.previous = node?.previous
 //        println("${node?.previous?.next?.value} ${node?.next?.value} ${node?.next?.previous?.value} ${node?.previous?.value}")
         size--
     }
 
     fun removeFirst() {
-        first = first?.next.apply {
+        firstNode = firstNode?.next.apply {
             this?.previous = null
         }
         size--
         if (size == 0)
-            last = null
+            lastNode = null
     }
 
     fun removeLast() {
-        last = last?.previous.apply {
+        lastNode = lastNode?.previous.apply {
             this?.next = null
         }
         size--
         if (size == 0)
-            first = null
+            firstNode = null
+    }
+
+    fun popFirst() : E? {
+        val returnValue = first
+        removeFirst()
+        return returnValue
+    }
+
+    fun popLast() : E? {
+        val returnValue = last
+        removeLast()
+        return returnValue
     }
 
     fun remove(element: E) {
-        var node = first
+        var node = firstNode
 
         if (node?.value == element) {
-            first = node?.next
+            firstNode = node?.next
             size--
             return
         }
@@ -184,25 +202,24 @@ class ExtendedList<E> {
         }
     }
 
-    fun doOnWorker(e: ELWorker<E>.() -> Unit) {
-        if (size > 0)
-            e(ELWorker(this))
-    }
-
-    fun forEach(action: (E) -> Unit) {
+    fun forEach(action: (element: E) -> Unit) {
         if (size > 0)
             repeat(size) {
                 action(get(it))
             }
     }
 
+    fun forEachIndexed(action: (index: Int, element: E) -> Unit) {
+        if (size > 0)
+            repeat(size) {
+                action(it, get(it))
+            }
+    }
+
     override fun toString(): String {
         var result = "["
-        doOnWorker {
-            while (!eof()) {
-                result += "$current, "
-                this.next()
-            }
+        forEach {
+            result += "$it, "
         }
         if (result.length > 1)
             result = result.dropLast(2)

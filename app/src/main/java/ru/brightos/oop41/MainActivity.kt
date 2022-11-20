@@ -1,7 +1,6 @@
 package ru.brightos.oop41
 
 import android.annotation.SuppressLint
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
@@ -9,22 +8,17 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
-import android.view.Menu
-import android.view.MenuItem
 import android.view.MotionEvent
-import android.view.View
-import android.view.View.OnClickListener
-import android.view.ViewManager
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.content.ContextCompat
-import com.google.android.material.snackbar.BaseTransientBottomBar
 import ru.brightos.oop41.databinding.ActivityMainBinding
+import ru.brightos.oop41.model.CCircle
+import ru.brightos.oop41.utils.correctDeclensionOfDeleted
+import ru.brightos.oop41.utils.correctDeclensionOfObjects
 import ru.brightos.oop41.utils.dp
 import ru.brightos.oop41.utils.extendedListOf
-import ru.brightos.oop41.view.CCircleView
-import ru.brightos.oop41.view.EmojiView
-import ru.brightos.oop41.view.MyCoordinatorLayout
+import ru.brightos.oop41.view.CircleView
+import ru.brightos.oop41.view.DrawLayout
+import ru.brightos.oop41.view.OnSingleObjectSelectedListener
+import ru.brightos.oop41.view.SelectableView
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,67 +33,58 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val circlesList = extendedListOf<CCircleView>()
+        val circlesList = extendedListOf<SelectableView>()
 
         binding.root.setOnTouchAction { motionEvent ->
             if (motionEvent.action == MotionEvent.ACTION_DOWN) {
                 val radius = 30.dp
-                val layoutParams = CoordinatorLayout.LayoutParams(
-                    (radius * 2).toInt(),
-                    (radius * 2).toInt()
-                ).apply {
-                    setMargins(
-                        (motionEvent.x - radius).toInt(),
-                        (motionEvent.y - radius).toInt(),
-                        0,
-                        0
-                    )
-                }
-                val newCircle = CCircleView(this, null, radius) {
-                    if (it.isSelected)
-                        it.isSelected = true
-                }.apply {
-                    this.layoutParams = layoutParams
-                }
+
+                val newCircle = CircleView(
+                    context = this,
+                    attrs = null,
+                    circle = CCircle(
+                        x = motionEvent.x - radius,
+                        y = motionEvent.y - radius,
+                        radius = radius
+                    ),
+                    onSingleObjectSelectedListener = object : OnSingleObjectSelectedListener {
+                        override fun onSingleObjectSelected() {
+                            circlesList.forEach { it.deselect() }
+                        }
+                    }
+                )
+
+                circlesList.forEach { it.deselect() }
                 circlesList.add(newCircle)
                 binding.root.addView(newCircle)
-//                binding.root.addView(EmojiView(this))
                 println(binding.root.right)
             }
-            true
-        }
-
-        binding.modeSwitch.setOnClickListener {
-            binding.root.onTouchEnabled = !binding.root.onTouchEnabled
-
-            binding.modeSwitch.setImageDrawable(
-                ContextCompat.getDrawable(
-                    this,
-                    if (binding.root.onTouchEnabled)
-                        R.drawable.ic_check_box
-                    else
-                        R.drawable.ic_add
-                )
-            )
-
-            Snackbar.make(
-                it,
-                if (binding.root.onTouchEnabled)
-                    "Включён режим создания объектов"
-                else
-                    "Включён режим выделения объектов",
-                Snackbar.LENGTH_LONG
-            ).setAnchorView(R.id.mode_switch).show()
         }
 
         binding.delete.setOnClickListener {
-            circlesList.forEach {
-                (it.parent as ViewManager).removeView(it)
-            }
-            circlesList.clear()
+            val idsToDelete = extendedListOf<Int>()
 
-            Snackbar.make(it, "Объекты удалены", Snackbar.LENGTH_LONG)
-                .setAnchorView(R.id.mode_switch)
+            circlesList.forEachIndexed { index, element ->
+                if (element.deleteView())
+                    idsToDelete.add(index)
+            }
+
+            val deletedObjectsCount = idsToDelete.size
+
+            while (!idsToDelete.isEmpty)
+                circlesList.removeAt(idsToDelete.popLast()!!)
+
+            Snackbar.make(
+                it,
+                "${
+                    correctDeclensionOfDeleted(deletedObjectsCount)
+                } $deletedObjectsCount ${
+                    correctDeclensionOfObjects(deletedObjectsCount)
+                }", // Удален(о) N объект(а)(ов)
+                Snackbar.LENGTH_LONG
+            )
+                .setAction("Ок") {}
+                .setAnchorView(R.id.delete)
                 .show()
         }
     }

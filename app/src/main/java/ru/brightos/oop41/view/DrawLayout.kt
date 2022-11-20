@@ -1,15 +1,12 @@
 package ru.brightos.oop41.view
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
-import android.view.View
-import android.view.ViewManager
 import androidx.annotation.AttrRes
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 
-class MyCoordinatorLayout : CoordinatorLayout {
+class DrawLayout : CoordinatorLayout {
     constructor(context: Context) : super(context)
     constructor(context: Context, attr: AttributeSet?) : super(context, attr)
     constructor(context: Context, attr: AttributeSet?, @AttrRes defStyleAttr: Int) : super(
@@ -18,13 +15,10 @@ class MyCoordinatorLayout : CoordinatorLayout {
         defStyleAttr
     )
 
-    var onTouchEnabled = true
-
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        if (onTouchEnabled) {
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (!super.dispatchTouchEvent(ev))
             onTouchAction(ev)
-        }
-        return false
+        return super.dispatchTouchEvent(ev)
     }
 
     private var onTouchAction: (MotionEvent) -> Unit = {}
@@ -33,10 +27,14 @@ class MyCoordinatorLayout : CoordinatorLayout {
         onTouchAction = l
     }
 
-//    override fun onTouchEvent(ev: MotionEvent): Boolean {
-//        if (onTouchEnabled) {
-//            onTouchAction(ev)
-//        }
-//        return super.onTouchEvent(ev)
-//    }
+    class LayoutParams(
+        width: Int,
+        height: Int,
+        marginLeft: Int,
+        marginTop: Int
+    ) : CoordinatorLayout.LayoutParams(width, height) {
+        init {
+            setMargins(marginLeft, marginTop, 0, 0)
+        }
+    }
 }
