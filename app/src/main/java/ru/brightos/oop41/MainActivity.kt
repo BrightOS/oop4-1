@@ -23,6 +23,12 @@ import ru.brightos.oop41.view.SelectableView
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    val circlesList = extendedListOf<SelectableView>()
+    val listener = object : OnSingleObjectSelectedListener {
+        override fun onSingleObjectSelected() {
+            circlesList.forEach { it.deselect() }
+        }
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +37,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val circlesList = extendedListOf<SelectableView>()
 
         binding.root.setOnTouchAction { motionEvent ->
             if (motionEvent.action == MotionEvent.ACTION_DOWN) {
@@ -41,15 +46,11 @@ class MainActivity : AppCompatActivity() {
                     context = this,
                     attrs = null,
                     circle = CCircle(
-                        x = motionEvent.x - radius,
-                        y = motionEvent.y - radius,
+                        x = motionEvent.x,
+                        y = motionEvent.y,
                         radius = radius
                     ),
-                    onSingleObjectSelectedListener = object : OnSingleObjectSelectedListener {
-                        override fun onSingleObjectSelected() {
-                            circlesList.forEach { it.deselect() }
-                        }
-                    }
+                    onSingleObjectSelectedListener = listener
                 )
 
                 circlesList.forEach { it.deselect() }

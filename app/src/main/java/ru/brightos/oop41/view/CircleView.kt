@@ -15,7 +15,7 @@ class CircleView : SelectableView {
         context: Context,
         attrs: AttributeSet? = null
     ) : super(context, attrs) {
-        circle = CCircle(x = 0f, y = 0f, radius = 100f)
+        circle = CCircle(x = 0f, y = 0f, radius = 30.dp)
     }
 
     constructor(
@@ -29,8 +29,8 @@ class CircleView : SelectableView {
         DrawLayout.LayoutParams(
             width = (circle.radius * 2).toInt(),
             height = (circle.radius * 2).toInt(),
-            marginLeft = circle.x.toInt(),
-            marginTop = circle.y.toInt()
+            marginLeft = (circle.x - circle.radius).toInt(),
+            marginTop = (circle.y - circle.radius).toInt()
         ),
         onSingleObjectSelectedListener
     ) {
